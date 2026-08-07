@@ -1,7 +1,7 @@
 import { test } from "../testFixtures/fixture";
 import { expect } from '@playwright/test';
 
-test.describe.serial('@regression: Create and Delete Test Board Scenario', () => {
+test.describe('@regression: Create Test Board Scenario', () => {
     test.beforeEach(async ({ boardPage }) => {
         await test.step('open trello', async () => {
             await boardPage.openApp();
@@ -11,15 +11,18 @@ test.describe.serial('@regression: Create and Delete Test Board Scenario', () =>
         })
     })
 
-    test('Create a test board', async ({ boardPage }) => {
+    test('Create a board', async ({ boardPage }) => {
         await test.step('create a new board', async () => {
             await boardPage.clickCreateBoardButtonOne();
+        })
+        await test.step('click first create board button', async () => {
+            await boardPage.clickCreateBoardButtonTwo();
         })
         await test.step('insert board title', async () => {
             await boardPage.enterBoardTitle();
         })
-        await test.step('click create board button', async () => {
-            await boardPage.clickCreateBoardButtonTwo();
+        await test.step('click second create board button', async () => {
+            await boardPage.createBoardButtonThree();
         })
         await test.step('confirm user is on board page', async () => {
             await boardPage.waitForBoardPage();
@@ -27,23 +30,9 @@ test.describe.serial('@regression: Create and Delete Test Board Scenario', () =>
         })
     })
 
-    test('Delete a test board', async ({ boardPage }) => {
-        await test.step('open the board', async () => {
-            await boardPage.clickBoardTile();
-        })
-        await test.step('close the board', async () => {
-            await boardPage.clickThreeDotsMenu();
-            await boardPage.closeBoard();
-            await boardPage.confirmCloseBoard();
-        })
-        await test.step('permanently delete the board', async () => {
-            await boardPage.clickThreeDotsMenu();
-            await boardPage.permanentDeleteBoard();
-            await boardPage.confirmPermanentDeleteBoard();
-        })
-        await test.step('confirm user is on home page', async () => {
-            await boardPage.waitForHomePage();
-            expect(await boardPage.getUrl()).toContain('https://trello.com/');
+    test.afterEach(async ({ boardPage }) => {
+        await test.step('cleanup test board', async () => {
+            await boardPage.deleteTestBoard();
         })
     })
 })

@@ -6,14 +6,11 @@ import {
     continueButton,
     loginButton 
 } from '../pageobjects/loginPage.js'
-import fs from 'fs'
-const testData = JSON.parse(fs.readFileSync('./data/users.json', 'utf-8'))
-
-const loginUrl = 'https://trello.com/login'
 
 class LoginPage {
-    constructor(page) {
+    constructor(page, testData) {
         this.page = page
+        this.testData = testData
     }
 
     async openApp() {
@@ -26,12 +23,12 @@ class LoginPage {
     }
 
     async enterUsername() {
-        await this.page.fill(usernameField, testData.validUsername)
+        await this.page.fill(usernameField, this.testData.validUsername)
         await this.page.click(continueButton)
     }
 
     async enterPassword() {
-        await this.page.fill(passwordField, testData.validPassword)
+        await this.page.fill(passwordField, this.testData.validPassword)
         await this.page.click(loginButton)
     }
 

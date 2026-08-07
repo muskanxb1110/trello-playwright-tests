@@ -3,6 +3,7 @@ import {
     createBoardButtonStepOne,
     createBoardTitle,
     createBoardButtonStepTwo,
+    createBoardButtonStepThree,
     boardTile,
     clickHorizontalThreeDotsTestBoard,
     closeBoardButton,
@@ -13,34 +14,37 @@ import {
     addListName,
     addListButton,
     listNameonBoard,
-    addCardButton,
-    addCardTextBox,
-    addCardButtonFinal,
+    addCardButtonInToDoList,
+    addCardTextBoxInToDoList,
+    addCardButtonFinalInToDoList,
     cardNameonBoard
 } from '../pageobjects/boardPage.js'
-import fs from 'fs'
-const testData = JSON.parse(fs.readFileSync('./data/users.json', 'utf-8'))
 
 class BoardPage {
-    constructor(page) {
+    constructor(page, testData) {
         this.page = page
+        this.testData = testData
     }
 
     async openApp() {
-        await this.page.goto(`https://trello.com/u/${testData.trelloUsername}/boards`)
-        await this.page.waitForLoadState('networkidle')
+        await this.page.goto(`https://trello.com/u/${this.testData.trelloUsername}/boards`)
+        await this.page.waitForSelector(createBoardButtonStepOne)
     }
 
     async clickCreateBoardButtonOne() {
         await this.page.click(createBoardButtonStepOne)
     }
 
-    async enterBoardTitle() {
-        await this.page.fill(createBoardTitle, testData.boardTitle)
-    }
-
     async clickCreateBoardButtonTwo() {
         await this.page.click(createBoardButtonStepTwo)
+    }
+
+    async enterBoardTitle() {
+        await this.page.fill(createBoardTitle, this.testData.boardTitle)
+    }
+
+    async createBoardButtonThree() {
+        await this.page.click(createBoardButtonStepThree)
     }
 
     async waitForBoardPage() {
@@ -56,27 +60,6 @@ class BoardPage {
         await this.page.click(boardTile)
     }
 
-    async clickThreeDotsMenu() {
-        await this.page.click(clickHorizontalThreeDotsTestBoard);
-    }
-
-    async closeBoard() {
-        await this.page.waitForSelector(closeBoardButton)
-        await this.page.click(closeBoardButton);
-    }
-
-    async confirmCloseBoard() {
-        await this.page.click(redCloseBoardButtonPopup);
-    }
-
-    async permanentDeleteBoard() {
-        await this.page.click(permanentDeleteBoardButton);
-    }
-
-    async confirmPermanentDeleteBoard() {
-        await this.page.click(redDeleteBoardConfirmButtonPopup);
-    }
-
     async waitForHomePage() {
         await this.page.waitForURL('**/u/**')
     }
@@ -84,23 +67,68 @@ class BoardPage {
     async createListonBoardPage() {
         await this.page.click(createListButton);
         await this.page.waitForSelector(addListName);
-        await this.page.fill(addListName, testData.listName);
+        await this.page.fill(addListName, this.testData.listName);
         await this.page.click(addListButton);
     }
 
     async confirmListonBoardPage() {
-        await expect(this.page.locator(listNameonBoard, { hasText: testData.listName })).toBeVisible();
+        await expect(this.page.locator(listNameonBoard, { hasText: this.testData.listName })).toBeVisible();
     }
 
     async createCardonBoardPage() {
-        await this.page.click(addCardButton);
-        await this.page.waitForSelector(addCardTextBox);
-        await this.page.fill(addCardTextBox, testData.cardName);
-        await this.page.click(addCardButtonFinal);
+        await this.page.click(addCardButtonInToDoList);
+        await this.page.waitForSelector(addCardTextBoxInToDoList);
+        await this.page.fill(addCardTextBoxInToDoList, this.testData.cardName);
+        await this.page.click(addCardButtonFinalInToDoList);
     }
 
     async confirmCardonBoardPage() {
-        await expect(this.page.locator(cardNameonBoard, { hasText: testData.cardName })).toBeVisible();
+        await expect(this.page.locator(cardNameonBoard, { hasText: this.testData.cardName })).toBeVisible();
+    }
+
+    async clickThreeDotsMenu() {
+        await this.page.click(clickHorizontalThreeDotsTestBoard);
+    }
+
+    async closeBoard() {
+        await this.page.waitForSelector(closeBoardButton);
+        await this.page.click(closeBoardButton);
+    }
+
+    async confirmCloseBoard() {
+        await this.page.waitForSelector(redCloseBoardButtonPopup);
+        await this.page.click(redCloseBoardButtonPopup);
+    }
+
+    async permanentDeleteBoard() {
+        await this.page.waitForSelector(permanentDeleteBoardButton);
+        await this.page.click(permanentDeleteBoardButton);
+    }
+
+    async confirmPermanentDeleteBoard() {
+        await this.page.waitForSelector(redDeleteBoardConfirmButtonPopup);
+        await this.page.click(redDeleteBoardConfirmButtonPopup);
+    }
+
+    // removes test data after each scenario to keep regression tests independent
+    async deleteTestBoard() {
+        try {
+            await this.clickThreeDotsMenu();
+            await this.closeBoard();
+            await this.confirmCloseBoard();
+
+            // reopen menu after board is closed
+            await this.clickThreeDotsMenu();
+
+            await this.permanentDeleteBoard();
+            await this.confirmPermanentDeleteBoard();
+
+            await this.waitForHomePage();
+
+        } catch (error) {
+            await this.page.screenshot({ path: 'cleanup-failure.png' });
+            console.log("Board cleanup failed:", error.message);
+        }
     }
 
 }
